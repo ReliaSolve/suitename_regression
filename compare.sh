@@ -44,8 +44,9 @@ for f in $files; do
   ##############################################
   # Full validation-file name
   fval=validation_reports/$f
-  if [ -n "$VERBOSE" ] ; then echo "Checking $fval" ; fi
+  #if [ -n "$VERBOSE" ] ; then echo "Checking $fval" ; fi
 
+  ##############################################
   # See if we have the RNAsuiteness key in the line and pull its value if so.
   # Note that there are absolute-percentile-RNAsuiteness and other prefixed versions
   # that we want to ignore.
@@ -58,10 +59,33 @@ for f in $files; do
   val=`echo "$val" | tr -d '"'`
 
   # The variable $val now has just the 0.XX value in string form.
-  echo $val
+  # echo $val
 
-  # mmtbx.mp_geo rna_backbone=True F:/data/Richardsons/4z4d.cif
-  # phenix.suitename -report -oneline -pointIDfields 7 -altIDfield 6
+  ##############################################
+  # Now run mp_geo on the input file and send its output to suitename.
+  # Parse the report from suitename to get the value rounded to three
+  # significant digits.
+
+  # Get the full mmCIF file name
+  d2=`echo $f | cut -d/ -f 2`
+  d3=`echo $f | cut -d/ -f 3`
+  cval=mmCIF/$d2/$d3.cif.gz
+  if [ -n "$VERBOSE" ] ; then echo "Comparing $cval" ; fi
+
+  # Decompress the file after making sure the file exists.
+  if [ ! -f $cval ] ; then continue ; fi
+  tfile="./tmp.cif"
+  gunzip < $cval > $tfile
+
+  # Run to get the output of the report
+  suite=`mmtbx.mp_geo rna_backbone=True $tfile | phenix.suitename -report -oneline -pointIDfields 7 -altIDfield 6`
+
+  # Parse to pull out average suiteness== 0.694 (for one particular file) and then round.
+  sval=`echo "$suite" | awk -F"average suiteness==" '{print $2}'`
+  # Remove blank lines.
+  # Pull only the first report, which will be the total; and only its first word
+  sval=`echo "$sval" | grep -v -e '^$' | head -1 | awk '{print $1}'`
+  echo "val = $val, sval = $sval"
 
 done
 
