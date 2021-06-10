@@ -39,6 +39,7 @@ if [ -n "$VERBOSE" ] ; then echo "Syncing validaton records" ; fi
 
 count=
 failed=0
+differed=0
 files=`cd validation_reports; find . -name \*.gz`
 for f in $files; do
 
@@ -63,7 +64,6 @@ for f in $files; do
   val=`echo "$val" | tr -d '"'`
 
   # The variable $val now has just the 0.XX value in string form.
-  # echo $val
 
   ##############################################
   # We found a file to check.
@@ -91,7 +91,7 @@ for f in $files; do
   mmtbx.mp_geo rna_backbone=True $tfile > $t2file
   if [ $? -ne 0 ] ; then
     let "failed++"
-    echo "Error running mp_geo on $d3 ($failed failures out of $count)"
+    echo "Error running mp_geo on $d3, value $val ($failed failures out of $count)"
     continue
   fi
   suite=`phenix.suitename -report -oneline -pointIDfields 7 -altIDfield 6 < $t2file`
@@ -115,20 +115,25 @@ for f in $files; do
   # Compare and see if we got the same results.
   diff=`echo "define abs(x) {if (x<0) {return -x}; return x;} ; abs($val-$sval)>0.005" | bc -l`
   if [ "$diff" -ne 0 ] ; then
-    let "failed++"
-    echo "Difference in $d3 PDB value = $val, SuiteName value = $sval ($failed failures out of $count)"
+    let "differed++"
+    echo "$d3 PDB value = $val, SuiteName value = $sval ($differed different, $failed failed of $count)"
     continue
   fi
 
 done
 
 echo
-if [ $failed -eq 0 ]
+if [ $differed -ne 0 ]
 then
-  echo "Success!"
-else
+  echo "$differed files differed out of $count that had suiteness scores"
+  exit $differed
+fi
+if [ $failed -ne 0 ]
+then
   echo "$failed files failed out of $count that had suiteness scores"
+  exit $failed
 fi
 
-exit $failed
+echo "Success!"
+exit 0
 
