@@ -91,7 +91,7 @@ for f in $files; do
   fi
   suite=`phenix.suitename -report -oneline -pointIDfields 7 -altIDfield 6 < $t2file`
 
-  # Parse to pull out average suiteness== 0.694 (for one particular file) and then round.
+  # Parse to pull out average suiteness== 0.694 (for one particular file)
   sval=`echo "$suite" | awk -F"average suiteness==" '{print $2}'`
   # Remove blank lines.
   # Pull only the first report, which will be the total; and only its first word
@@ -104,13 +104,14 @@ for f in $files; do
     continue
   fi
 
-  # Use Banker's rounding to find the nearest 2-digit number (rounds 0.5 to even).
-  sval=`printf "%.2f" $sval`
-
+  # Use the basic calculator (bc) with the floating-point (-l) option to determine
+  # whether the absolute value of the result is larger than half of a significant
+  # digit.
   # Compare and see if we got the same results.
-  if [ "$val" != "$sval" ] ; then
+  diff=`echo "define abs(x) {if (x<0) {return -x}; return x;} ; abs($val-$sval)>0.005" | bc -l`
+  if [ "$diff" -ne 0 ] ; then
     let "failed++"
-    echo "$f PDB value = $val, SuiteName value = $sval ($failed failures)"
+    echo "Difference in $f PDB value = $val, SuiteName value = $sval ($failed failures)"
     continue
   fi
 
