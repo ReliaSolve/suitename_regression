@@ -85,8 +85,8 @@ for f in $files; do
   t2file="./tmp2.out"
   mmtbx.mp_geo rna_backbone=True $tfile > $t2file
   if [ $? -ne 0 ] ; then
-    echo "Error running mp_geo for $cname"
     let "failed++"
+    echo "Error running mp_geo for $cname ($failed failures)"
     continue
   fi
   suite=`phenix.suitename -report -oneline -pointIDfields 7 -altIDfield 6 < $t2file`
@@ -96,16 +96,23 @@ for f in $files; do
   # Remove blank lines.
   # Pull only the first report, which will be the total; and only its first word
   sval=`echo "$sval" | grep -v -e '^$' | head -1 | awk '{print $1}'`
-  # Use Banker's rounding to find the nearest 2-digit number (rounds 0.5 to even).
-  sval=`printf "%.2f" $sval`
 
   # Report failure on this file if it happens.
   if [ `echo $sval | wc -w` -ne 1 ] ; then
-    echo "Error computing suiteness for $cname"
     let "failed++"
+    echo "Error computing suiteness for $cname ($failed failures)"
     continue
   fi
-  echo "$f val = $val, sval = $sval"
+
+  # Use Banker's rounding to find the nearest 2-digit number (rounds 0.5 to even).
+  sval=`printf "%.2f" $sval`
+
+  # Compare and see if we got the same results.
+  if [ "$val" != "$sval" ] ; then
+    let "failed++"
+    echo "$f PDB value = $val, SuiteName value = $sval ($failed failures)"
+    continue
+  fi
 
 done
 
