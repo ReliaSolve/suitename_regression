@@ -37,6 +37,7 @@ if [ -n "$VERBOSE" ] ; then echo "Syncing validaton records" ; fi
 # For each validation file, see if we can extract the required record.  If so,
 # run suitename on the mmCIF file and see if they match.
 
+count=
 failed=0
 files=`cd validation_reports; find . -name \*.gz`
 for f in $files; do
@@ -65,6 +66,10 @@ for f in $files; do
   # echo $val
 
   ##############################################
+  # We found a file to check.
+  let "count++"
+
+  ##############################################
   # Now run mp_geo on the input file and send its output to suitename.
   # Parse the report from suitename to get the value rounded to three
   # significant digits.
@@ -86,7 +91,7 @@ for f in $files; do
   mmtbx.mp_geo rna_backbone=True $tfile > $t2file
   if [ $? -ne 0 ] ; then
     let "failed++"
-    echo "Error running mp_geo on $d3 ($failed failures)"
+    echo "Error running mp_geo on $d3 ($failed failures out of $count)"
     continue
   fi
   suite=`phenix.suitename -report -oneline -pointIDfields 7 -altIDfield 6 < $t2file`
@@ -100,7 +105,7 @@ for f in $files; do
   # Report failure on this file if it happens.
   if [ `echo $sval | wc -w` -ne 1 ] ; then
     let "failed++"
-    echo "Error computing suiteness for $d3 ($failed failures)"
+    echo "Error computing suiteness for $d3 ($failed failures out of $count)"
     continue
   fi
 
@@ -111,7 +116,7 @@ for f in $files; do
   diff=`echo "define abs(x) {if (x<0) {return -x}; return x;} ; abs($val-$sval)>0.005" | bc -l`
   if [ "$diff" -ne 0 ] ; then
     let "failed++"
-    echo "Difference in $d3 PDB value = $val, SuiteName value = $sval ($failed failures)"
+    echo "Difference in $d3 PDB value = $val, SuiteName value = $sval ($failed failures out of $count)"
     continue
   fi
 
@@ -122,7 +127,7 @@ if [ $failed -eq 0 ]
 then
   echo "Success!"
 else
-  echo "$failed files failed"
+  echo "$failed files failed out of $count that had suiteness scores"
 fi
 
 exit $failed
