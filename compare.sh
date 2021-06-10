@@ -86,7 +86,7 @@ for f in $files; do
   mmtbx.mp_geo rna_backbone=True $tfile > $t2file
   if [ $? -ne 0 ] ; then
     let "failed++"
-    echo "Error running mp_geo for $cname ($failed failures)"
+    echo "Error running mp_geo on $d3 ($failed failures)"
     continue
   fi
   suite=`phenix.suitename -report -oneline -pointIDfields 7 -altIDfield 6 < $t2file`
@@ -100,7 +100,7 @@ for f in $files; do
   # Report failure on this file if it happens.
   if [ `echo $sval | wc -w` -ne 1 ] ; then
     let "failed++"
-    echo "Error computing suiteness for $cname ($failed failures)"
+    echo "Error computing suiteness for $d3 ($failed failures)"
     continue
   fi
 
@@ -111,7 +111,7 @@ for f in $files; do
   diff=`echo "define abs(x) {if (x<0) {return -x}; return x;} ; abs($val-$sval)>0.005" | bc -l`
   if [ "$diff" -ne 0 ] ; then
     let "failed++"
-    echo "Difference in $f PDB value = $val, SuiteName value = $sval ($failed failures)"
+    echo "Difference in $d3 PDB value = $val, SuiteName value = $sval ($failed failures)"
     continue
   fi
 
