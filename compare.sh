@@ -37,11 +37,16 @@ if [ -n "$VERBOSE" ] ; then echo "Syncing validaton records" ; fi
 # For each validation file, see if we can extract the required record.  If so,
 # run suitename on the mmCIF file and see if they match.
 
-count=
+total=0
+count=0
 failed=0
 differed=0
 files=`cd validation_reports; find . -name \*.gz`
 for f in $files; do
+
+  ##############################################
+  # We found a file.
+  let "total++"
 
   ##############################################
   # Full validation-file name
@@ -116,7 +121,7 @@ for f in $files; do
   diff=`echo "define abs(x) {if (x<0) {return -x}; return x;} ; abs($val-$sval)>0.005" | bc -l`
   if [ "$diff" -ne 0 ] ; then
     let "differed++"
-    echo "$d3 PDB value = $val, SuiteName value = $sval ($differed different, $failed failed of $count)"
+    echo "$d3 PDB value = $val, SuiteName value = $sval ($differed different, $failed failed of $count/$total)"
     continue
   fi
 
