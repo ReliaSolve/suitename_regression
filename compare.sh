@@ -94,6 +94,14 @@ for f in $files; do
   tfile="./tmp.cif"
   gunzip < $cname > $tfile
 
+  # Clean up the file to make sure we have a valid unit cell.
+  iotbx.pdb.box_around_molecule $tfile output.filename=$tfile output.overwrite=True > /dev/null
+  if [ $? -ne 0 ] ; then
+    let "failed++"
+    echo "Error running iotbx.pdb.box_around_molecule on $d3, value $val ($failed failures out of $count)"
+    continue
+  fi
+
   # Run to get the output of the report.
   # If either program returns failure, report the failure.
   t2file="./tmp2.out"
