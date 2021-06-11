@@ -47,6 +47,10 @@ for f in $files; do
   ##############################################
   # We found a file.
   let "total++"
+  mod=`echo "$total % 1000" | bc`
+  if [ "$mod" -eq 0 ] ; then
+    echo "Checked $total files..."
+  fi
 
   ##############################################
   # Full validation-file name
