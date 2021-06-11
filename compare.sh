@@ -98,18 +98,17 @@ for f in $files; do
   # If either program returns failure, report the failure.
   t2file="./tmp2.out"
   mmtbx.mp_geo rna_backbone=True $tfile > $t2file
+  #java -Xmx512m -cp ~/src/MolProbity/lib/dangle.jar dangle.Dangle rnabb $tfile > $t2file
   if [ $? -ne 0 ] ; then
     let "failed++"
     echo "Error running mp_geo on $d3, value $val ($failed failures out of $count)"
     continue
   fi
-  suite=`phenix.suitename -report -oneline -pointIDfields 7 -altIDfield 6 < $t2file`
+  suite=`phenix.suitename -report -pointIDfields 7 -altIDfield 6 < $t2file`
 
   # Parse to pull out average suiteness== 0.694 (for one particular file)
-  sval=`echo "$suite" | awk -F"average suiteness==" '{print $2}'`
+  sval=`echo "$suite" | grep "For all" | awk '{print $7}'`
   # Remove blank lines.
-  # Pull only the first report, which will be the total; and only its first word
-  sval=`echo "$sval" | grep -v -e '^$' | head -1 | awk '{print $1}'`
 
   # Report failure on this file if it happens.
   if [ `echo $sval | wc -w` -ne 1 ] ; then
