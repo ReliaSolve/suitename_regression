@@ -95,27 +95,29 @@ for f in $files; do
   gunzip < $cname > $tfile
 
   # Clean up the file to make sure we have a valid unit cell.
-  iotbx.pdb.box_around_molecule $tfile output.filename=$tfile output.overwrite=True > /dev/null
-  if [ $? -ne 0 ] ; then
-    let "failed++"
-    echo "Error running iotbx.pdb.box_around_molecule on $d3, value $val ($failed failures out of $count)"
-    continue
-  fi
+  #iotbx.pdb.box_around_molecule $tfile output.filename=$tfile output.overwrite=True > /dev/null
+  #if [ $? -ne 0 ] ; then
+  #  let "failed++"
+  #  echo "Error running iotbx.pdb.box_around_molecule on $d3, value $val ($failed failures out of $count)"
+  #  continue
+  #fi
 
   # Run to get the output of the report.
   # If either program returns failure, report the failure.
-  t2file="./tmp2.out"
-  mmtbx.mp_geo rna_backbone=True $tfile > $t2file
+  #t2file="./tmp2.dangle"
+  #python ~/rlab/cctbx_reliasolve/modules/cctbx_project/mmtbx/suitename/myangle.py $tfile > $t2file
+  #mmtbx.mp_geo rna_backbone=True $tfile > $t2file
   #java -Xmx512m -cp ~/src/MolProbity/lib/dangle.jar dangle.Dangle rnabb $tfile > $t2file
-  if [ $? -ne 0 ] ; then
-    let "failed++"
-    echo "Error running mp_geo on $d3, value $val ($failed failures out of $count)"
-    continue
-  fi
-  suite=`phenix.suitename -report -pointIDfields 7 -altIDfield 6 < $t2file`
+  #if [ $? -ne 0 ] ; then
+  #  let "failed++"
+  #  echo "Error running myangle on $d3, value $val ($failed failures out of $count)"
+  #  continue
+  #fi
+  suite=`phenix.suitename -report -pointIDfields 7 -altIDfield 6 $tfile`
 
   # Parse to pull out average suiteness== 0.694 (for one particular file)
-  sval=`echo "$suite" | grep "For all" | awk '{print $7}'`
+  # @todo Change this back from $8 to $7 when the report format is repaired
+  sval=`echo "$suite" | grep "For all" | awk '{print $8}'`
   # Remove blank lines.
 
   # Report failure on this file if it happens.
