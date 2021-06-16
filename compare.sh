@@ -94,19 +94,18 @@ for f in $files; do
   tfile="./tmp.cif"
   gunzip < $cname > $tfile
 
-  # Clean up the file to make sure we have a valid unit cell.
-  iotbx.pdb.box_around_molecule $tfile > deleteme
-  mv deleteme $tfile
+  # Convert to PDB format to avoid problems that mp_geo has parsing CIF files.
+  phenix.cif_as_pdb $tfile > /dev/null
   if [ $? -ne 0 ] ; then
     let "failed++"
-    echo "Error running iotbx.pdb.box_around_molecule on $d3, value $val ($failed failures out of $count)"
+    echo "Error running phenix.cif_as_pdb on $d3, value $val ($failed failures out of $count)"
     continue
   fi
 
   # Run to get the output of the report.
   # If either program returns failure, report the failure.
   t2file="./tmp2.out"
-  mmtbx.mp_geo rna_backbone=True pdb=$tfile > $t2file
+  mmtbx.mp_geo rna_backbone=True pdb='tmp.pdb' > $t2file
   #java -Xmx512m -cp ~/src/MolProbity/lib/dangle.jar dangle.Dangle rnabb $tfile > $t2file
   if [ $? -ne 0 ] ; then
     let "failed++"
