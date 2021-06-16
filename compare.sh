@@ -27,11 +27,11 @@ if [ "$1" != "" ] ; then VERBOSE="yes" ; fi
 ######################
 # Pull the XML validation records
 if [ -n "$VERBOSE" ] ; then echo "Syncing validaton records" ; fi
-#./get_validation.sh
+./get_validation.sh
 
 ######################
 # Pull the mMCIF files
-#./get_data.sh
+./get_data.sh
 
 ######################
 # For each validation file, see if we can extract the required record.  If so,
@@ -94,18 +94,19 @@ for f in $files; do
   tfile="./tmp.cif"
   gunzip < $cname > $tfile
 
-  # Clean up the file to make sure we have a valid unit cell.
-  iotbx.pdb.box_around_molecule $tfile output.filename=$tfile output.overwrite=True > /dev/null
+  # Convert the file to PDB format because CIF files give mmtbx.mp_geo problems that
+  # the corresponding converted PDB files do not.
+  iotbx.cif_as_pdb $tfile > /dev/null
   if [ $? -ne 0 ] ; then
     let "failed++"
-    echo "Error running iotbx.pdb.box_around_molecule on $d3, value $val ($failed failures out of $count)"
+    echo "Error running iotbx.cif_as_pdb on $d3, value $val ($failed failures out of $count)"
     continue
   fi
 
-  # Run to get the output of the report.
-  # If either program returns failure, report the failure.
+  # Run mp_geo on the PDB file to get the angles and feed that to SuiteName to output the report.
+  # If either program returns failure, report this as a failure.
   t2file="./tmp2.out"
-  mmtbx.mp_geo rna_backbone=True $tfile > $t2file
+  mmtbx.mp_geo rna_backbone=True "./tmp.pdb" > $t2file
   #java -Xmx512m -cp ~/src/MolProbity/lib/dangle.jar dangle.Dangle rnabb $tfile > $t2file
   if [ $? -ne 0 ] ; then
     let "failed++"
@@ -125,14 +126,14 @@ for f in $files; do
     continue
   fi
 
+  # Compare to see if we got the same results.
   # Use the basic calculator (bc) with the floating-point (-l) option to determine
-  # whether the absolute value of the result is larger than half of a significant
+  # whether the absolute value of the difference is larger than half of a significant
   # digit.
-  # Compare and see if we got the same results.
   diff=`echo "define abs(x) {if (x<0) {return -x}; return x;} ; abs($val-$sval)>0.005" | bc -l`
   if [ "$diff" -ne 0 ] ; then
     let "differed++"
-    echo "$d3 PDB value = $val, SuiteName value = $sval ($differed different, $failed failed of $count/$total)"
+    echo "$d3 PDB value = $val SuiteName value = $sval ($differed different, $failed failed of $count/$total)"
     continue
   fi
 
