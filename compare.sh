@@ -27,11 +27,11 @@ if [ "$1" != "" ] ; then VERBOSE="yes" ; fi
 ######################
 # Pull the XML validation records
 if [ -n "$VERBOSE" ] ; then echo "Syncing validaton records" ; fi
-./get_validation.sh
+#./get_validation.sh
 
 ######################
 # Pull the mMCIF files
-./get_data.sh
+#./get_data.sh
 
 ######################
 # For each validation file, see if we can extract the required record.  If so,
