@@ -1,7 +1,8 @@
 #!/bin/bash
 #############################################################################
 # Run regression tests for the current SuiteName program against the values
-# currently stored in the PDB for Suiteness.
+# currently stored in the PDB for Suiteness.  Also run against the previous
+# version of SuiteName to see if they produce the same outputs.
 #
 # This presumes that you are running in an environment where you have
 # mmtbx.mp_geo and phenix.suitename on your path and have access to the
@@ -32,6 +33,22 @@ if [ -n "$VERBOSE" ] ; then echo "Syncing validaton records" ; fi
 ######################
 # Pull the mMCIF files
 #./get_data.sh
+
+#####################
+# Make sure the suitename submodule is checked out
+
+echo "Updating submodule"
+git submodule update --init
+(cd suitename; git pull) &> /dev/null
+
+orig="db42e66d7869fd2c41c25c9d9188160bf2a8de2f"
+echo "Building $orig"
+(cd suitename; git checkout $orig) &> /dev/null
+mkdir -p build_new
+(cd build_new; cmake -DCMAKE_BUILD_TYPE=Release ../suitename; make) &> /dev/null
+orig_exe="./build_new/suitename"
+new_exe="phenix.suitename"
+
 
 ######################
 # For each validation file, see if we can extract the required record.  If so,
@@ -113,7 +130,7 @@ for f in $files; do
     echo "Error running mp_geo on $d3, value $val ($failed failures out of $count)"
     continue
   fi
-  suite=`phenix.suitename -report -pointIDfields 7 -altIDfield 6 < $t2file`
+  suite=`$orig_exe -report -pointIDfields 7 -altIDfield 6 < $t2file`
 
   # Parse to pull out average suiteness== 0.694 (for one particular file)
   sval=`echo "$suite" | grep "For all" | awk '{print $7}'`

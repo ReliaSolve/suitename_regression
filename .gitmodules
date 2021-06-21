@@ -1,0 +1,3 @@
+[submodule "suitename"]
+	path = suitename
+	url = https://github.com/reliasolve/suitename.git
