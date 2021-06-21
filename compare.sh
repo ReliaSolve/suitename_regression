@@ -4,6 +4,10 @@
 # currently stored in the PDB for Suiteness.  Also run against the previous
 # version of SuiteName to see if they produce the same outputs.
 #
+# Must be run in an environment where "phenix.suitename" points at the
+# new CCTBX version of SuiteName and where the monomer libraries can be
+# found so that the conversion program works.
+#
 # This presumes that you are running in an environment where you have
 # mmtbx.mp_geo and phenix.suitename on your path and have access to the
 # rsync command as well.
@@ -103,7 +107,8 @@ for f in $files; do
   # Get the full mmCIF file name
   d2=`echo $f | cut -d/ -f 2`
   d3=`echo $f | cut -d/ -f 3`
-  cname=mmCIF/$d2/$d3.cif.gz
+  name=$d3
+  cname=mmCIF/$d2/$name.cif.gz
   if [ -n "$VERBOSE" ] ; then echo "Comparing $cname" ; fi
 
   # Decompress the file after making sure the file exists.
@@ -116,21 +121,41 @@ for f in $files; do
   iotbx.cif_as_pdb $tfile > /dev/null
   if [ $? -ne 0 ] ; then
     let "failed++"
-    echo "Error running iotbx.cif_as_pdb on $d3, value $val ($failed failures out of $count)"
+    echo "Error running iotbx.cif_as_pdb on $name, value $val ($failed failures out of $count)"
     continue
   fi
 
   # Run mp_geo on the PDB file to get the angles and feed that to SuiteName to output the report.
   # If either program returns failure, report this as a failure.
-  t2file="./tmp2.out"
+  t2file="./tmp2.dangle"
   mmtbx.mp_geo rna_backbone=True "./tmp.pdb" > $t2file
   #java -Xmx512m -cp ~/src/MolProbity/lib/dangle.jar dangle.Dangle rnabb $tfile > $t2file
   if [ $? -ne 0 ] ; then
     let "failed++"
-    echo "Error running mp_geo on $d3, value $val ($failed failures out of $count)"
+    echo "Error running mp_geo on $name, value $val ($failed failures out of $count)"
     continue
   fi
-  suite=`$orig_exe -report -pointIDfields 7 -altIDfield 6 < $t2file`
+
+  ########
+  # Run both versions of SuiteName on the file, storing them for later comparison.
+  # Report failure if it happens.
+  $orig_exe -report -pointIDfields 7 -altIDfield 6 < $t2file > ./outputs/$name.orig
+  if [ $? -ne 0 ] ; then
+    let "failed++"
+    echo "Error computing orig suiteness for $name ($failed failures out of $count)"
+    continue
+  fi
+
+  $new_exe -report -pointIDfields 7 -altIDfield 6 < $t2file > ./outputs/$name.new
+  if [ $? -ne 0 ] ; then
+    let "failed++"
+    echo "Error computing new suiteness for $name ($failed failures out of $count)"
+    continue
+  fi
+
+  ########
+  # Read one of the files back in for comparison against the PDB results.
+  suite=`cat ./outputs/$name.orig`
 
   # Parse to pull out average suiteness== 0.694 (for one particular file)
   sval=`echo "$suite" | grep "For all" | awk '{print $7}'`
@@ -139,7 +164,7 @@ for f in $files; do
   # Report failure on this file if it happens.
   if [ `echo $sval | wc -w` -ne 1 ] ; then
     let "failed++"
-    echo "Error computing suiteness for $d3 ($failed failures out of $count)"
+    echo "Error computing suiteness for $name ($failed failures out of $count)"
     continue
   fi
 
@@ -150,7 +175,7 @@ for f in $files; do
   diff=`echo "define abs(x) {if (x<0) {return -x}; return x;} ; abs($val-$sval)>0.005" | bc -l`
   if [ "$diff" -ne 0 ] ; then
     let "differed++"
-    echo "$d3 PDB value = $val SuiteName value = $sval ($differed different, $failed failed of $count/$total)"
+    echo "$name PDB value = $val SuiteName value = $sval ($differed different, $failed failed of $count/$total)"
     continue
   fi
 
