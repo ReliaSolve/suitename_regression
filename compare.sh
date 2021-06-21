@@ -6,7 +6,7 @@
 #
 # Must be run in an environment where "phenix.suitename" points at the
 # new CCTBX version of SuiteName and where the monomer libraries can be
-# found so that the conversion program works.
+# found so that the mp_geo program works.
 #
 # This presumes that you are running in an environment where you have
 # mmtbx.mp_geo and phenix.suitename on your path and have access to the
@@ -61,6 +61,7 @@ new_exe="phenix.suitename"
 total=0
 count=0
 failed=0
+old_vs_new=0
 differed=0
 files=`cd validation_reports; find . -name \*.gz`
 for f in $files; do
@@ -154,6 +155,14 @@ for f in $files; do
   fi
 
   ########
+  # Test for unexpected differences between the old and new outputs.
+  d=`diff outputs/$name.orig outputs/$name.new | wc -c`
+  if [ $d -ne 0 ]; then
+    let "old_vs_new++"
+    echo "Old vs. new comparison failed ($old_vs_new out of $count)"
+  fi
+
+  ########
   # Read one of the files back in for comparison against the PDB results.
   suite=`cat ./outputs/$name.orig`
 
@@ -182,6 +191,11 @@ for f in $files; do
 done
 
 echo
+if [ $old_vs_new -ne 0 ]
+then
+  echo "$old_vs_new files differed between old and new out of $count that had suiteness scores"
+  exit $old_vs_new
+fi
 if [ $differed -ne 0 ]
 then
   echo "$differed files differed out of $count that had suiteness scores"
