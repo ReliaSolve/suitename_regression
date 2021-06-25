@@ -128,38 +128,82 @@ for f in $files; do
 
   # Run mp_geo on the PDB file to get the angles and feed that to SuiteName to output the report.
   # If either program returns failure, report this as a failure.
-  t2file="./tmp2.dangle"
+  t2file="./outputs/$name.dangle"
   mmtbx.mp_geo rna_backbone=True "./tmp.pdb" > $t2file
   #java -Xmx512m -cp ~/src/MolProbity/lib/dangle.jar dangle.Dangle rnabb $tfile > $t2file
   if [ $? -ne 0 ] ; then
     let "failed++"
     echo "Error running mp_geo on $name, value $val ($failed failures out of $count)"
-    continue
+    #continue
   fi
 
   ########
   # Run both versions of SuiteName on the file, storing them for later comparison.
   # Report failure if it happens.
-  $orig_exe -report -pointIDfields 7 -altIDfield 6 < $t2file > ./outputs/$name.orig
+  $orig_exe -report -pointIDfields 7 -altIDfield 6 < $t2file > ./outputs/$name.report.orig
   if [ $? -ne 0 ] ; then
     let "failed++"
     echo "Error computing orig suiteness for $name ($failed failures out of $count)"
-    continue
   fi
 
-  $new_exe -report -pointIDfields 7 -altIDfield 6 < $t2file > ./outputs/$name.new
+  $new_exe -report -pointIDfields 7 -altIDfield 6 < $t2file > ./outputs/$name.report.new
   if [ $? -ne 0 ] ; then
     let "failed++"
     echo "Error computing new suiteness for $name ($failed failures out of $count)"
-    continue
   fi
 
   ########
   # Test for unexpected differences between the old and new outputs.
-  d=`diff outputs/$name.orig outputs/$name.new | wc -c`
+  d=`diff outputs/$name.report.orig outputs/$name.report.new | wc -c`
   if [ $d -ne 0 ]; then
     let "old_vs_new++"
     echo "Old vs. new comparison failed ($old_vs_new out of $count)"
+  fi
+
+  ########
+  # Run both versions of SuiteName with -string -oneline, storing them for later comparison.
+  # Report failure if it happens.
+  $orig_exe -string -oneline -pointIDfields 7 -altIDfield 6 < $t2file > ./outputs/$name.string.orig
+  if [ $? -ne 0 ] ; then
+    let "failed++"
+    echo "Error computing orig string suiteness for $name ($failed failures out of $count)"
+  fi
+
+  $new_exe -string -oneline -pointIDfields 7 -altIDfield 6 < $t2file > ./outputs/$name.string.new
+  if [ $? -ne 0 ] ; then
+    let "failed++"
+    echo "Error computing new string suiteness for $name ($failed failures out of $count)"
+  fi
+
+  ########
+  # Test for unexpected differences between the old and new outputs.
+  d=`diff outputs/$name.string.orig outputs/$name.string.new | wc -c`
+  if [ $d -ne 0 ]; then
+    let "old_vs_new++"
+    echo "Old vs. new string comparison failed ($old_vs_new out of $count)"
+  fi
+
+  ########
+  # Run both versions of SuiteName with -kinemage, storing them for later comparison.
+  # Report failure if it happens.
+  $orig_exe -kinemage -pointIDfields 7 -altIDfield 6 < $t2file > ./outputs/$name.kinemage.orig
+  if [ $? -ne 0 ] ; then
+    let "failed++"
+    echo "Error computing orig kinemage suiteness for $name ($failed failures out of $count)"
+  fi
+
+  $new_exe -kinemage -pointIDfields 7 -altIDfield 6 < $t2file > ./outputs/$name.kinemage.new
+  if [ $? -ne 0 ] ; then
+    let "failed++"
+    echo "Error computing new kinemage suiteness for $name ($failed failures out of $count)"
+  fi
+
+  ########
+  # Test for unexpected differences between the old and new outputs.
+  d=`diff outputs/$name.kinemage.orig outputs/$name.kinemage.new | wc -c`
+  if [ $d -ne 0 ]; then
+    let "old_vs_new++"
+    echo "Old vs. new kinemage comparison failed ($old_vs_new out of $count)"
   fi
 
   ########
@@ -174,6 +218,7 @@ for f in $files; do
   if [ `echo $sval | wc -w` -ne 1 ] ; then
     let "failed++"
     echo "Error computing suiteness for $name ($failed failures out of $count)"
+    # Skip comparing the results if we could not compute them.
     continue
   fi
 
@@ -185,7 +230,6 @@ for f in $files; do
   if [ "$diff" -ne 0 ] ; then
     let "differed++"
     echo "$name PDB value = $val SuiteName value = $sval ($differed different, $failed failed of $count/$total)"
-    continue
   fi
 
 done
