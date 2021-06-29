@@ -45,11 +45,11 @@ echo "Updating submodule"
 git submodule update --init
 (cd suitename; git pull) &> /dev/null
 
-orig="db42e66d7869fd2c41c25c9d9188160bf2a8de2f"
+orig="04aa4b15de2dec0ff74d09c3ef8919e51130bb84"
 echo "Building $orig"
 (cd suitename; git checkout $orig) &> /dev/null
 mkdir -p build_new
-(cd build_new; cmake -DCMAKE_BUILD_TYPE=Release ../suitename; make) &> /dev/null
+(cd build_new; cmake -DCMAKE_BUILD_TYPE=Release ../suitename/C; make) &> /dev/null
 orig_exe="./build_new/suitename"
 new_exe="phenix.suitename"
 
@@ -207,8 +207,8 @@ for f in $files; do
   fi
 
   ########
-  # Read one of the files back in for comparison against the PDB results.
-  suite=`cat ./outputs/$name.orig`
+  # Read one of the reports back in for comparison against the PDB results.
+  suite=`cat ./outputs/$name.report.orig`
 
   # Parse to pull out average suiteness== 0.694 (for one particular file)
   sval=`echo "$suite" | grep "For all" | awk '{print $7}'`
