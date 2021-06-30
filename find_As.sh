@@ -17,7 +17,7 @@ if [ "$1" != "" ] ; then VERBOSE="yes" ; fi
 total=0
 foundAFiles=0
 foundAs=0
-dirs=`cd mmCIF; find . -type d`
+dirs=`cd mmCIF; find * -type d`
 for d in $dirs; do
 
   files=`cd mmCIF/$d; find . -name \*.gz`
