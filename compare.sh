@@ -36,7 +36,7 @@ if [ -n "$VERBOSE" ] ; then echo "Syncing validaton records" ; fi
 
 ######################
 # Pull the mMCIF files
-#./get_data.sh
+#./get_mmCIF.sh
 
 #####################
 # Make sure the suitename submodule is checked out
@@ -45,7 +45,7 @@ echo "Updating submodule"
 git submodule update --init
 (cd suitename; git pull) &> /dev/null
 
-orig="04aa4b15de2dec0ff74d09c3ef8919e51130bb84"
+orig="253963d128f0ca0990f54c38e222e56a20906af8"
 echo "Building $orig"
 (cd suitename; git checkout $orig) &> /dev/null
 mkdir -p build_new
