@@ -31,7 +31,8 @@ for d in $dirs; do
       echo "Checked $total files..."
     fi
 
-    As=`gunzip < mmCIF/$d/$f | grep '^ATOM  \|^HETATM ' | awk '{print $4}' | grep ^A$ | wc -l`
+    # The names are A1 and A2
+    As=`gunzip < mmCIF/$d/$f | grep '^ATOM  \|^HETATM ' | awk '{print $4}' | grep '^A1$\|^A2$' | wc -l`
     if [ "$As" -ne 0 ] ; then
       let "foundAFiles++"
       let "foundAs+=$As"
