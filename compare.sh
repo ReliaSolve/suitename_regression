@@ -45,7 +45,7 @@ echo "Updating submodule"
 git submodule update --init
 (cd suitename; git pull) &> /dev/null
 
-orig="253963d128f0ca0990f54c38e222e56a20906af8"
+orig="2e95a00decb30eaaaacc25feaf8c2860fdd585a3"
 echo "Building $orig"
 (cd suitename; git checkout $orig) &> /dev/null
 mkdir -p build_new
@@ -222,8 +222,13 @@ for f in $files; do
   fi
 
   ########
+  # Remove expected differences between the two files.
+  grep -v suitename < outputs/$name.kinemage.orig > outputs/$name.kinemage.orig.cleaned
+  grep -v suitename < outputs/$name.kinemage.new > outputs/$name.kinemage.new.cleaned
+
+  ########
   # Test for unexpected differences between the old and new outputs.
-  d=`diff outputs/$name.kinemage.orig outputs/$name.kinemage.new | wc -c`
+  d=`diff outputs/$name.kinemage.orig.cleaned outputs/$name.kinemage.new.cleaned | wc -c`
   if [ $d -ne 0 ]; then
     let "old_vs_new++"
     echo "Old vs. new kinemage comparison failed for $name ($old_vs_new out of $count)"
