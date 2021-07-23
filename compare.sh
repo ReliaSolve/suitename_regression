@@ -289,5 +289,5 @@ if [ $ret -eq 0 ]
 then
   echo "Success!"
 fi
-exit ret
+exit $ret
 
