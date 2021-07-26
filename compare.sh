@@ -146,7 +146,7 @@ for f in $files; do
   d=`diff outputs/$name.cif outputs/$name.pdb | wc -c`
   if [ $d -ne 0 ]; then
     let "pdb_vs_cif++"
-    echo "PDB vs. CIF comparison failed ($pdb_vs_cif out of $count)"
+    echo "PDB vs. CIF comparison failed for $name ($pdb_vs_cif out of $count)"
   fi
 
   # Run mp_geo on the PDB file to get the angles and feed that to SuiteName to output the report.
