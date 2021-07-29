@@ -177,7 +177,7 @@ for f in $files; do
 
   ########
   # Test for unexpected differences between the old and new outputs.
-  d=`diff outputs/$name.report.orig outputs/$name.report.new | wc -c`
+  d=`diff outputs/$name.report.orig outputs/$name.report.new | python3 filter_report_diff_low_order_bit.py |& wc -c`
   if [ $d -ne 0 ]; then
     let "old_vs_new++"
     echo "Old vs. new comparison failed for $name ($old_vs_new out of $count)"
@@ -228,7 +228,7 @@ for f in $files; do
 
   ########
   # Test for unexpected differences between the old and new outputs.
-  d=`diff outputs/$name.kinemage.orig.cleaned outputs/$name.kinemage.new.cleaned | wc -c`
+  d=`diff outputs/$name.kinemage.orig.cleaned outputs/$name.kinemage.new.cleaned | python3 filter_kinemage_diff_low_order_bit.py |& wc -c`
   if [ $d -ne 0 ]; then
     let "old_vs_new++"
     echo "Old vs. new kinemage comparison failed for $name ($old_vs_new out of $count)"
