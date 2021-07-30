@@ -26,8 +26,12 @@
 
 ######################
 # Parse the command line
+# The first argument, if present, specifies the modulo of 8 to use when
+# deciding whether the script should run a file.  (It used to specify
+# VERBOSE="yes").
 
-if [ "$1" != "" ] ; then VERBOSE="yes" ; fi
+MODULO=""
+if [ "$1" != "" ] ; then MODULO="$1" ; fi
 
 ######################
 # Pull the XML validation records
@@ -100,6 +104,16 @@ for f in $files; do
   ##############################################
   # We found a file to check.
   let "count++"
+
+  ##############################################
+  # See if our modulo parameter tells us to skip it.
+  if [ "$MODULO" != "" ] ; then
+    mod=$(("$count" % 8))
+    if [ "$mod" -ne "$MODULO" ] ; then
+      echo "Skipping $f, modulo = $mod"
+      continue
+    fi
+  fi
 
   ##############################################
   # Now run mp_geo on the input file and send its output to suitename.
