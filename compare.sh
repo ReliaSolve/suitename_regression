@@ -143,6 +143,17 @@ for f in $files; do
     continue
   fi
 
+  # Run mp_geo on the PDB file to get the angles.
+  # If the program returns failure, skip other tests on the file.
+  t2file="./outputs/$name.dangle"
+  mmtbx.mp_geo rna_backbone=True $pdbfile > $t2file
+  #java -Xmx512m -cp ~/src/MolProbity/lib/dangle.jar dangle.Dangle rnabb $ciffile > $t2file
+  if [ $? -ne 0 ] ; then
+    let "failed++"
+    echo "Error running mp_geo on $name, value $val ($failed failures out of $count)"
+    continue
+  fi
+
   ########
   # Run the new version of SuiteName on the CIF and PDB versions.
   # Report failure if it happens.
@@ -163,17 +174,6 @@ for f in $files; do
   if [ $d -ne 0 ]; then
     let "pdb_vs_cif++"
     echo "PDB vs. CIF comparison failed for $name ($pdb_vs_cif out of $count)"
-  fi
-
-  # Run mp_geo on the PDB file to get the angles and feed that to SuiteName to output the report.
-  # If either program returns failure, report this as a failure.
-  t2file="./outputs/$name.dangle"
-  mmtbx.mp_geo rna_backbone=True $pdbfile > $t2file
-  #java -Xmx512m -cp ~/src/MolProbity/lib/dangle.jar dangle.Dangle rnabb $ciffile > $t2file
-  if [ $? -ne 0 ] ; then
-    let "failed++"
-    echo "Error running mp_geo on $name, value $val ($failed failures out of $count)"
-    #continue
   fi
 
   ########
