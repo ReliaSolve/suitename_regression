@@ -129,12 +129,14 @@ for f in $files; do
 
   # Decompress the file after making sure the file exists.
   if [ ! -f $cname ] ; then continue ; fi
-  tfile="./tmp.cif"
-  gunzip < $cname > $tfile
+  temp=$$
+  ciffile="$temp.cif"
+  pdbfile="$temp.pdb"
+  gunzip < $cname > $ciffile
 
   # Convert the file to PDB format because CIF files give mmtbx.mp_geo problems that
   # the corresponding converted PDB files do not.
-  iotbx.cif_as_pdb $tfile > /dev/null
+  iotbx.cif_as_pdb $ciffile > /dev/null
   if [ $? -ne 0 ] ; then
     let "failed++"
     echo "Error running iotbx.cif_as_pdb on $name, value $val ($failed failures out of $count)"
@@ -144,12 +146,12 @@ for f in $files; do
   ########
   # Run the new version of SuiteName on the CIF and PDB versions.
   # Report failure if it happens.
-  $new_exe -report $tfile 2>/dev/null > ./outputs/$name.cif
+  $new_exe -report $ciffile 2>/dev/null > ./outputs/$name.cif
   if [ $? -ne 0 ] ; then
     let "failed++"
     echo "Error computing suiteness from CIF for $name ($failed failures out of $count)"
   fi
-  $new_exe -report "./tmp.pdb" 2>/dev/null > ./outputs/$name.pdb
+  $new_exe -report $pdbfile 2>/dev/null > ./outputs/$name.pdb
   if [ $? -ne 0 ] ; then
     let "failed++"
     echo "Error computing suiteness from PDB for $name ($failed failures out of $count)"
@@ -166,8 +168,8 @@ for f in $files; do
   # Run mp_geo on the PDB file to get the angles and feed that to SuiteName to output the report.
   # If either program returns failure, report this as a failure.
   t2file="./outputs/$name.dangle"
-  mmtbx.mp_geo rna_backbone=True "./tmp.pdb" > $t2file
-  #java -Xmx512m -cp ~/src/MolProbity/lib/dangle.jar dangle.Dangle rnabb $tfile > $t2file
+  mmtbx.mp_geo rna_backbone=True $pdbfile > $t2file
+  #java -Xmx512m -cp ~/src/MolProbity/lib/dangle.jar dangle.Dangle rnabb $ciffile > $t2file
   if [ $? -ne 0 ] ; then
     let "failed++"
     echo "Error running mp_geo on $name, value $val ($failed failures out of $count)"
@@ -273,6 +275,10 @@ for f in $files; do
     let "differed++"
     echo "$name PDB value = $val SuiteName value = $sval ($differed different, $failed failed of $count/$total)"
   fi
+
+  # Remove the temporary files
+  rm $ciffile
+  rm $pdbfile
 
 done
 
