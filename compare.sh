@@ -143,11 +143,10 @@ for f in $files; do
     continue
   fi
 
-  # Run mp_geo on the PDB file to get the angles.  Strip out any "Atom pair" errors
-  # from the file; they should not be fed into SuiteName.
+  # Run mp_geo on the PDB file to get the angles.
   # If the program returns failure, skip other tests on the file.
   t2file="./outputs/$name.dangle"
-  mmtbx.mp_geo rna_backbone=True $pdbfile | grep -v "Atom pair" > $t2file
+  mmtbx.mp_geo rna_backbone=True $pdbfile > $t2file
   #java -Xmx512m -cp ~/src/MolProbity/lib/dangle.jar dangle.Dangle rnabb $ciffile > $t2file
   if [ $? -ne 0 ] ; then
     let "failed++"
