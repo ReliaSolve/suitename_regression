@@ -154,29 +154,27 @@ for f in $files; do
     continue
   fi
 
-### @todo Comment this back in when we want to check the timings on these to make sure
-### that issue #110 has been resolved.
-###   ########
-###   # Run the new version of SuiteName on the CIF and PDB versions.
-###   # Report failure if it happens.
-###   $new_exe -report $ciffile 2>/dev/null > ./outputs/$name.cif
-###   if [ $? -ne 0 ] ; then
-###     let "failed++"
-###     echo "Error computing suiteness from CIF for $name ($failed failures out of $count)"
-###   fi
-###   $new_exe -report $pdbfile 2>/dev/null > ./outputs/$name.pdb
-###   if [ $? -ne 0 ] ; then
-###     let "failed++"
-###     echo "Error computing suiteness from PDB for $name ($failed failures out of $count)"
-###   fi
-### 
-###   ########
-###   # Test for unexpected differences between the PDB and CIF outputs.
-###   d=`diff outputs/$name.cif outputs/$name.pdb | wc -c`
-###   if [ $d -ne 0 ]; then
-###     let "pdb_vs_cif++"
-###     echo "PDB vs. CIF comparison failed for $name ($pdb_vs_cif out of $count)"
-###   fi
+  ########
+  # Run the new version of SuiteName on the CIF and PDB versions.
+  # Report failure if it happens.
+  $new_exe -report $ciffile 2>/dev/null > ./outputs/$name.cif
+  if [ $? -ne 0 ] ; then
+    let "failed++"
+    echo "Error computing suiteness from CIF for $name ($failed failures out of $count)"
+  fi
+  $new_exe -report $pdbfile 2>/dev/null > ./outputs/$name.pdb
+  if [ $? -ne 0 ] ; then
+    let "failed++"
+    echo "Error computing suiteness from PDB for $name ($failed failures out of $count)"
+  fi
+
+  ########
+  # Test for unexpected differences between the PDB and CIF outputs.
+  d=`diff outputs/$name.cif outputs/$name.pdb | wc -c`
+  if [ $d -ne 0 ]; then
+    let "pdb_vs_cif++"
+    echo "PDB vs. CIF comparison failed for $name ($pdb_vs_cif out of $count)"
+  fi
 
   ########
   # Run both versions of SuiteName on the file, storing them for later comparison.
