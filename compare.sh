@@ -49,7 +49,7 @@ echo "Updating submodule"
 git submodule update --init
 (cd suitename; git pull) &> /dev/null
 
-orig="0105199a20122dc1e6d3be64fc839ed039a7e54f"
+orig="866452b459a04546992525c7b8283be8d636e650"
 echo "Building $orig"
 (cd suitename; git checkout $orig) &> /dev/null
 mkdir -p build_new
